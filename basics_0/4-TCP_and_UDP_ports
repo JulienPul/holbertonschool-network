@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
-# Display listening TCP/UDP and UNIX sockets with PID/program name
+# Display listening TCP/UDP sockets with PID/program name, then UNIX sockets
 
-# Use ss (modern replacement for netstat)
-# -l : listening only
-# -p : show PID/program
-# -t : TCP
-# -u : UDP
-# -n : numeric addresses/ports
-# -x : UNIX domain sockets
-sudo ss -lptun
+# Internet sockets (TCP/UDP) — listening only, numeric, show PID/program
+sudo ss -lntup
+
+echo
+echo "Active UNIX domain sockets (only servers)"
+# UNIX domain sockets — listening only, show PID/program
 sudo ss -lxp
