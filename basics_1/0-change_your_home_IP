@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# Put 127.0.0.2 localhost and 8.8.8.8 facebook.com at the top of /etc/hosts (IPv4 first)
+# Configure /etc/hosts so localhost -> 127.0.0.2 and facebook.com -> 8.8.8.8 (idempotent)
 
 set -euo pipefail
 IFS=$'\n\t'
 
 tmp="$(mktemp)"
 
-# On part du /etc/hosts existant en retirant les tokens 'localhost' et 'facebook.com' de toutes les lignes
+# 1) On part de /etc/hosts en supprimant les tokens 'localhost' et 'facebook.com'
+#    (même sur la ligne IPv6 ::1) pour éviter les doublons/priorités foireuses
 awk '
-  /^[[:space:]]*#/ { print; next }
+  /^[[:space:]]*#/ { print; next }          # garder les commentaires
   {
     out=""
     for (i=1; i<=NF; i++) {
@@ -20,7 +21,14 @@ awk '
   }
 ' /etc/hosts > "$tmp"
 
-# On préfixe avec nos mappings
-{ printf '127.0.0.2 localhost\n8.8.8.8 facebook.com\n'; cat "$tmp"; } > "${tmp}.new"
-sudo install -m 0644 "${tmp}.new" /etc/hosts
+# 2) On préfixe avec nos 2 mappages (ordre = priorité)
+{
+  printf '127.0.0.2 localhost\n'
+  printf '8.8.8.8 facebook.com\n'
+  cat "$tmp"
+} > "${tmp}.new"
+
+# 3) Remplacement (pas de sortie)
+cp "${tmp}.new" /etc/hosts
+
 rm -f "$tmp" "${tmp}.new"
