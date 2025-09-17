@@ -1,20 +1,11 @@
 #!/usr/bin/env bash
 # Put 127.0.0.2 localhost and 8.8.8.8 facebook.com at the top of /etc/hosts
-set -euo pipefail
-IFS=$'\n\t'
-
-if [ "${EUID:-$(id -u)}" -ne 0 ]; then
-  echo "Run this script with sudo." >&2
-  exit 1
-fi
+set -euo pipefail; IFS=$'\n\t'
 
 tmp="$(mktemp)"
-
-{
-  printf '127.0.0.2 localhost\n'
-  printf '8.8.8.8 facebook.com\n'
-  cat /etc/hosts
-} > "$tmp"
-
-install -m 0644 "$tmp" /etc/hosts
-rm -f "$tmp"
+# retirer d’éventuelles anciennes lignes
+grep -Ev '^(127\.0\.0\.2[[:space:]]+localhost|8\.8\.8\.8[[:space:]]+facebook\.com)([[:space:]]|$)' /etc/hosts > "$tmp"
+# préfixer proprement
+{ printf '127.0.0.2 localhost\n8.8.8.8 facebook.com\n'; cat "$tmp"; } > "${tmp}.new"
+install -m 0644 "${tmp}.new" /etc/hosts
+rm -f "$tmp" "${tmp}.new"
