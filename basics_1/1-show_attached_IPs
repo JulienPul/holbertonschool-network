@@ -1,3 +1,8 @@
 #!/usr/bin/env bash
 # Display all active IPv4 addresses on this machine, one per line
+
+set -euo pipefail
+
+# IPv4 only (-4), format one-line per addr (-o), only interfaces UP (show up)
+# Keep the "IP/CIDR" in column 4 and strip the /mask
 ip -o -4 addr show up | awk '{print $4}' | cut -d/ -f1
