@@ -1,11 +1,26 @@
 #!/usr/bin/env bash
-# Put 127.0.0.2 localhost and 8.8.8.8 facebook.com at the top of /etc/hosts
-set -euo pipefail; IFS=$'\n\t'
+# Put 127.0.0.2 localhost and 8.8.8.8 facebook.com at the top of /etc/hosts (IPv4 first)
+
+set -euo pipefail
+IFS=$'\n\t'
 
 tmp="$(mktemp)"
-# retirer d’éventuelles anciennes lignes
-grep -Ev '^(127\.0\.0\.2[[:space:]]+localhost|8\.8\.8\.8[[:space:]]+facebook\.com)([[:space:]]|$)' /etc/hosts > "$tmp"
-# préfixer proprement
+
+# On part du /etc/hosts existant en retirant les tokens 'localhost' et 'facebook.com' de toutes les lignes
+awk '
+  /^[[:space:]]*#/ { print; next }
+  {
+    out=""
+    for (i=1; i<=NF; i++) {
+      if ($i != "localhost" && $i != "facebook.com") {
+        out = out (out=="" ? $i : " " $i)
+      }
+    }
+    if (out != "") print out
+  }
+' /etc/hosts > "$tmp"
+
+# On préfixe avec nos mappings
 { printf '127.0.0.2 localhost\n8.8.8.8 facebook.com\n'; cat "$tmp"; } > "${tmp}.new"
-install -m 0644 "${tmp}.new" /etc/hosts
+sudo install -m 0644 "${tmp}.new" /etc/hosts
 rm -f "$tmp" "${tmp}.new"
