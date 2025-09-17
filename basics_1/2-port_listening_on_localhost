@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Listen on TCP port 98 on localhost (IPv4) and print anything received
+
+set -euo pipefail
+
+# Lie sur l’IPv4 de localhost (127.0.0.1 ou 127.0.0.2 selon /etc/hosts)
+bind_ip="$(getent ahostsv4 localhost | awk 'NR==1{print $1}')"
+
+# OpenBSD nc (Ubuntu): -l (listen), -s addr (bind), -p port
+# Fallback pour autres variantes si la 1re commande échoue
+nc -l -s "$bind_ip" -p 98 2>/dev/null || nc -l "$bind_ip" 98
