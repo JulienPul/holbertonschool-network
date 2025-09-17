@@ -1,34 +1,25 @@
 #!/usr/bin/env bash
-# Configure /etc/hosts so localhost -> 127.0.0.2 and facebook.com -> 8.8.8.8 (idempotent)
+# Configure /etc/hosts so localhost -> 127.0.0.2 and facebook.com -> 8.8.8.8 (idempotent, IPv6-safe)
 
 set -euo pipefail
 IFS=$'\n\t'
 
 tmp="$(mktemp)"
-
-# 1) On part de /etc/hosts en supprimant les tokens 'localhost' et 'facebook.com'
-#    (même sur la ligne IPv6 ::1) pour éviter les doublons/priorités foireuses
+# 1) repartir de /etc/hosts en retirant les tokens 'localhost' et 'facebook.com' (y compris sur ::1)
 awk '
-  /^[[:space:]]*#/ { print; next }          # garder les commentaires
+  /^[[:space:]]*#/ { print; next }
   {
-    out=""
-    for (i=1; i<=NF; i++) {
-      if ($i != "localhost" && $i != "facebook.com") {
-        out = out (out=="" ? $i : " " $i)
-      }
+    out=$1
+    for (i=2; i<=NF; i++) {
+      if ($i != "localhost" && $i != "facebook.com") out=out" "$i
     }
-    if (out != "") print out
+    print out
   }
 ' /etc/hosts > "$tmp"
 
-# 2) On préfixe avec nos 2 mappages (ordre = priorité)
-{
-  printf '127.0.0.2 localhost\n'
-  printf '8.8.8.8 facebook.com\n'
-  cat "$tmp"
-} > "${tmp}.new"
+# 2) préfixer nos deux mappages pour leur donner la priorité
+{ printf '127.0.0.2 localhost\n8.8.8.8 facebook.com\n'; cat "$tmp"; } > "${tmp}.new"
 
-# 3) Remplacement (pas de sortie)
+# 3) remplacer silencieusement
 cp "${tmp}.new" /etc/hosts
-
 rm -f "$tmp" "${tmp}.new"
