@@ -2,6 +2,7 @@
 # Display listening TCP/UDP sockets with PID/program name, then UNIX sockets
 
 # Internet sockets (TCP/UDP) — listening only, numeric, show PID/program
+
 sudo ss -lntup
 
 echo
