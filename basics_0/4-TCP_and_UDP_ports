@@ -3,9 +3,4 @@
 
 # Internet sockets (TCP/UDP) — listening only, numeric, show PID/program
 
-sudo ss -lntup
-
-echo
-echo "Active UNIX domain sockets (only servers)"
-# UNIX domain sockets — listening only, show PID/program
-sudo ss -lxp
+netstat -l -p
